@@ -1,6 +1,6 @@
 ## What is this
   
-I created this web-based file-explorer application in Spring Boot, HTML, CSS and Javascript, to make it possible to simply manage the files over the network to open, edit (text files), download, upload, share, stream videos, create files and folders, execute commands, etc.
+I created this web-based file-explorer application in Java Spring, HTML, CSS and Javascript, to make it possible to simply manage the files over the network to open, edit (text files), download, upload, share, stream videos, create files and folders, execute commands, etc.
 
 ## How to use
 1. Build application with "mvn package -DskipTests"
