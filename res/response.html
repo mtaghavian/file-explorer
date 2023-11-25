@@ -1,0 +1,44 @@
+<html>
+<head>
+    <title>Droplet</title>
+    <meta charset="utf-8">
+    <link rel="icon" href="/favicon.svg"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- UIkit CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.6.18/dist/css/uikit.min.css" />
+
+    <!-- UIkit JS -->
+    <script src="https://cdn.jsdelivr.net/npm/uikit@3.6.18/dist/js/uikit.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/uikit@3.6.18/dist/js/uikit-icons.min.js"></script>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<div class="HeaderHeight HeaderBackground" style="width: 100%; position: fixed;top: 0px;z-index: 1;">
+    <div style="display: inline-flex; flex-direction: row-reverse;width: 100%;">
+        <div class="HeaderHeight uk-text-normal" style="text-align: center;flex: auto; color:white;">
+            <img src="/favicon.svg" class="HeaderIcon" alt=""/>
+            &nbsp&nbsp Droplet
+        </div>
+    </div>
+</div>
+
+<br/>
+<div>
+    Here-goes-the-response
+
+    <button id="Return" class="uk-button uk-button-link Centered" >Return to the main page</button>
+</div>
+
+<script src="/script.js"></script>
+<script>
+    $("#Return").click(function () {
+        returnPage();
+    });
+</script>
+</body>
+</html>

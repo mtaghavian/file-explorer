@@ -1,0 +1,98 @@
+<html>
+<head>
+    <title>Droplet</title>
+    <meta charset="utf-8">
+    <link rel="icon" href="favicon.svg"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="HeaderHeight HeaderBackground" style="width: 100%; position: fixed;top: 0px;z-index: 1;">
+    <div class="Centered" style="display: inline-flex; flex-direction: row-reverse;">
+        <div class="HeaderHeight uk-text-normal" style="text-align: center;flex: auto; color:white;">
+            <div id="PageTitle" class="HeaderTitle">Cmd</div>
+        </div>
+        <div class="HeaderHeight" id="Return" style="text-align: center;flex: 0 0 50px;">
+            &nbsp <img src="left-arrow.svg" style="width:20px; height: 20px;" alt=""/>
+            &nbsp
+        </div>
+    </div>
+</div>
+<div class="Centered" style="padding: 0px 20px 20px 20px; font-family: monospace;">
+    <br/>
+    Request URL
+    <input type="text" class="form-control" id="requestUrl" placeholder="">
+    <br/>
+    Request Body
+    <textarea class="form-control" id="requestBody" rows="6"></textarea>
+    <br/>
+    <button type="button" class="btn btn-primary" style="width: 48%;" id="getButton">GET</button>
+    <button type="button" class="btn btn-primary" style="width: 48%;" id="postButton">POST</button>
+    <br/><br/>
+    Response Status
+    <input type="text" class="form-control" id="responseStatus" placeholder="">
+    <br/>
+    Response
+    <textarea class="form-control" id="responseBody" rows="6"></textarea>
+
+    <div class="toast" style="position: absolute; top: 20px; right: 20px;">
+        <div class="toast-header">
+            Notification
+        </div>
+        <div class="toast-body">
+            Http response received!
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+<script>
+    $("#Return").click(function () {
+        returnPage();
+    });
+    $(document).ready(function () {
+        $.ajaxSetup({
+            contentType: "application/json; charset=utf-8"
+        });
+
+        var sendRequest = function(methodType) {
+            var beginTime = (new Date()).getTime();
+            $.ajax({
+                url: $("#requestUrl").val(),
+                type: methodType,
+                error: function (data, status) {
+                    var responseTime = ((new Date()).getTime()) - beginTime;
+                    $("#responseStatus").val("status: " + status + ", time: " + responseTime + " (ms)");
+                    $("#responseBody").val("" + JSON.stringify(data, null, 2));
+                    $(".toast").toast("show");
+                },
+                success: function (data, status) {
+                    var responseTime = ((new Date()).getTime()) - beginTime;
+                    $("#responseStatus").val("status: " + status + ", time: " + responseTime + " (ms)");
+                    var msg = "" + data;
+                    if (typeof data === 'object' && data !== null) {
+                        msg = "" + JSON.stringify(data, null, 2);
+                    }
+                    $("#responseBody").val("" + msg);
+                    $(".toast").toast("show");
+                },
+                data: (methodType === 'GET' ? '' : $("#requestBody").val())
+            });
+        };
+
+        $("#getButton").click(function () {
+            sendRequest("GET");
+        });
+        $("#postButton").click(function () {
+            sendRequest("POST");
+        });
+    });
+</script>
+</body>
+</html>

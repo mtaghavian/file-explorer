@@ -1,0 +1,787 @@
+<html style="background-color: black; color: white;">
+<head>
+    <title>Droplet</title>
+    <meta charset="utf-8">
+    <link rel="icon" href="favicon.svg"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- UIkit  -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.6.18/dist/css/uikit.min.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/uikit@3.6.18/dist/js/uikit.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/uikit@3.6.18/dist/js/uikit-icons.min.js"></script>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+
+    <link rel="stylesheet" href="styles.css">
+
+    <style>
+        .linear-gradient {
+            background-image: linear-gradient(to bottom, #000000, #111111);
+        }
+
+        .radial-gradient {
+            background-image: radial-gradient(#000077, #65A5FF);
+        }
+    </style>
+</head>
+<body>
+<div class="HeaderHeight HeaderBackground"
+     style="width: 100%; position: fixed;top: 0px; z-index: 1; background-color: #797979;">
+    <div class="Centered" style="display: inline-flex; flex-direction: row-reverse;">
+        <div class="HeaderHeight BCCBlue" style="text-align: center;flex: auto; color:white;">
+            <div id="PageTitle" class="HeaderTitle" style="color: white;">File Explorer</div>
+        </div>
+    </div>
+</div>
+
+<div class="Centered">
+    <div style="border-radius: 10px; border: 1px solid #cccccc; margin-top: 20px;overflow:hidden;">
+        <div id="Path" class="uk-form-controls"
+             style="width: calc(100% - 50px); display: block; background-color: black; color: gray; border: none; margin-left: 20px; margin-top: 10px;">
+        </div>
+        <div class="uk-form-controls" style="width: calc(100% - 25px); display: inline-block">
+            <select class="uk-select" id="Dirs"
+                    style="background-color: black; color: white; border: none; margin-left: 10px;"
+                    onchange="DChange()">
+            </select>
+        </div>
+        <div class="uk-form-controls SelectFile" style="">
+            <select class="uk-select" id="Files"
+                    style="background-color: black; color: white; border: none; margin-left: 10px;"
+                    onchange="FChange()">
+            </select>
+        </div>
+        <div style="display: inline-block; float:right; padding-right: 15px; padding-top: 5px; padding-bottom: 10px;">
+            <img id="DeleteModel" src="delete-white.svg"
+                 style="display: inline-block; width: 25px;padding-left: 5px; padding-right: 5px;">
+            <img id="RenameModel" src="rename-white.svg"
+                 style="display: inline-block; width: 25px;padding-left: 5px; padding-right: 5px;">
+            <img id="DetailBut" src="info-white.svg"
+                 style="display: inline-block; width: 25px;padding-left: 5px; padding-right: 5px;">
+            <img id="PrevBut" src="arrow-left-white.svg"
+                 style="display: inline-block; width: 30px;padding-left: 5px; padding-right: 5px;">
+            <img id="NextBut" src="arrow-right-white.svg"
+                 style="display: inline-block; width: 30px;padding-left: 5px; padding-right: 5px;">
+            <img id="ShuffleBut" src="shuffle.svg"
+                 style="display: inline-block; width: 25px;padding-left: 5px; padding-right: 5px;">
+            <img id="OptionBut" src="options-white.svg"
+                 style="display: inline-block; width: 25px;padding-left: 5px; padding-right: 5px;">
+        </div>
+    </div>
+    <br/>
+
+    <div style="width: 100%; text-align: center;">
+        <video id="VideoElem" style="display: none; max-height: 100%; max-width: 100%;" controls autoplay controlsList="nodownload" loop="true" name="media" oncontextmenu="return false;"></video>
+        <img id="ImgElem" style="display: none; max-height: 100%; max-width: 100%;">
+        <textarea id="Code" spellcheck="false" name="Code" style="display: none; height: calc(100% - 180px); min-width: 100%;"></textarea>
+    </div>
+</div>
+
+<div id="delete-modal" class="uk-flex-top" uk-modal>
+    <div class="uk-modal-dialog uk-margin-auto-vertical Centered" style="padding: 20px;">
+        <h5 id="DeleteMessage"></h5>
+        <p class="uk-text-right" style="margin: 0;">
+            <button class="uk-button uk-button-default uk-modal-close" style="margin: 10px;" type="button">No</button>
+            <button id="DeleteFile" class="uk-button uk-button-primary" style="margin: 10px;" type="button">Yes</button>
+        </p>
+    </div>
+</div>
+
+<div id="InputModal" class="uk-flex-top" uk-modal>
+    <div class="uk-modal-dialog uk-margin-auto-vertical Centered" style="padding: 20px;">
+        <div id="edit-modal-text" style="font-size: 1rem; color: black; padding-bottom: 10px;"></div>
+        <input class="uk-input" autocomplete="off" style="margin-bottom: 10px; padding: 10px;" id="modalField" type="text" placeholder="">
+        <p class="uk-text-right" style="margin: 0;">
+            <label style="color: black; float: left; padding: 10px;"><input id="CloseInputDialog" class="uk-checkbox" type="checkbox" checked="true">&nbsp; Close this dialog after submit</label>
+            <button class="uk-button uk-button-default uk-modal-close" style="margin: 10px;" type="button">Close</button>
+            <button id="SubmitBut" class="uk-button uk-button-primary" style="margin: 10px;" type="button">Submit</button>
+        </p>
+    </div>
+</div>
+
+<div id="share-modal" class="uk-flex-top" uk-modal>
+    <div class="uk-modal-dialog uk-margin-auto-vertical Centered" style="padding: 0px;">
+        <ul class="uk-nav uk-dropdown-nav" style="text-align: center;">
+            <li><a id="DownloadLink" class="ModalButtons" href="#">Share Download Link</a></li>
+            <li><a id="StreamLink" class="ModalButtons" href="#">Share Stream Link</a></li>
+        </ul>
+    </div>
+</div>
+
+<div id="option-modal" class="uk-flex-top" uk-modal>
+    <div class="uk-modal-dialog uk-margin-auto-vertical Centered" style="padding: 0px;">
+        <ul class="uk-nav uk-dropdown-nav" style="text-align: center;">
+            <li><a id="UploadBut" class="ModalButtons" href="#"><img src="upload.svg" style="display: inline-block; width: 15px; margin-right: 15px;">
+                Upload files</a></li>
+            <li><a id="CreateFolder" class="ModalButtons" href="#"><img src="plus.svg" style="display: inline-block; width: 10px; margin-right: 15px;">
+                Create a new folder</a></li>
+            <li><a id="CreateFile" class="ModalButtons" href="#"><img src="plus.svg" style="display: inline-block; width: 10px; margin-right: 15px;">
+                Create a new file</a></li>
+            <li><a id="ExecuteCommand" class="ModalButtons" href="#"><img src="refresh.svg" style="display: inline-block; width: 15px; margin-right: 15px;">
+                Execute a command</a></li>
+            <li><a id="RefreshDir" class="ModalButtons" href="#"><img src="refresh.svg" style="display: inline-block; width: 15px; margin-right: 15px;">
+                Refresh</a></li>
+            <li><a id="OpenTextBut" class="ModalButtons" href="#"><img src="eye.svg" style="display: inline-block; width: 15px; margin-right: 15px;">
+                Open as text</a></li>
+            <li><a id="WriteTextBut" class="ModalButtons" href="#"><img src="save.svg" style="display: inline-block; width: 15px; margin-right: 15px;">
+                Save as text</a></li>
+            <li><a id="DownloadBut" class="ModalButtons" href="#"><img src="download.svg" style="display: inline-block; width: 15px; margin-right: 15px;">
+                Download</a></li>
+            <li><a id="ShareBut" class="ModalButtons" href="#"><img src="share.svg" style="display: inline-block; width: 15px; margin-right: 15px;">
+                Share</a></li>
+            <li><a id="RotateBut" class="ModalButtons" href="#"><img src="refresh.svg" style="display: inline-block; width: 15px; margin-right: 15px;">
+                Rotate</a></li>
+            <li><a id="OptimizeBut" class="ModalButtons" href="#"><img src="optimize.svg" style="display: inline-block; width: 15px; margin-right: 15px;">
+                Optimize</a></li>
+            <li><a id="AboutBut" class="ModalButtons" href="#"><img src="info.svg" style="display: inline-block; width: 15px; margin-right: 15px;">
+                About</a></li>
+        </ul>
+    </div>
+</div>
+
+<div id="upload-modal" class="uk-flex-top" uk-modal style="color: black;">
+    <div class="uk-modal-dialog uk-margin-auto-vertical Centered" style="padding: 20px;">
+        <div class="Centered uk-text-center" style="text-align: center;">
+            <div id="FileUploadPanel" class="Centered" style="padding: 20px" uk-form-custom>
+                <input type="file" id="fileLoader" name="fileLoader" multiple>
+                <span><span uk-icon="icon: cloud-upload"></span> &nbsp;Drag & Drop, or <span
+                        class="uk-link">Select</span></span>
+            </div>
+        </div>
+        <label style="width: 90%; display: block; padding: 10px;"><input id="Optimize" class="uk-checkbox" type="checkbox">&nbsp; Optimize photos</label>
+        <label style="width: 90%; display: block; padding: 10px;"><input id="Overwrite" class="uk-checkbox" type="checkbox" checked="true">&nbsp; Overwrite</label>
+    </div>
+</div>
+
+<script src="script.js"></script>
+
+<script>
+
+    $("#Code").hide();
+
+    var path = "";
+    var inputModalChoice = "rename";
+
+    function getUrlVars() {
+        var vars = [], hash;
+        if (window.location.href.indexOf('?') == -1) {
+            return vars;
+        }
+        var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+        for (var i = 0; i < hashes.length; i++) {
+            hash = hashes[i].split('=');
+            vars[hash[0]] = hash[1];
+        }
+        return vars;
+    }
+
+    var url_vars = getUrlVars();
+    for (var i in url_vars) {
+        if (i === "path") {
+            path = url_vars[i];
+        }
+    }
+
+    createLoadingSpinner();
+
+    var fileUploadPanel = document.getElementById('FileUploadPanel');
+    var fileLoader = document.getElementById('fileLoader');
+    fileLoader.addEventListener('change', handleChange, false);
+    var files = null;
+    var uploadedFilesCount = 0;
+    var fileMap = {};
+    var finishUploading = function () {
+        uploadedFilesCount--;
+        if (uploadedFilesCount === 0) {
+            files = null;
+            hideLoading();
+            reload();
+        }
+    };
+
+    var openastext = function (x) {
+        $.ajax({
+            url: ("/api/general/files/open?addr=" + path + "/" + encodeURIComponent(x) + "&t=" + (new Date().getTime())),
+            type: "GET",
+            dataType: "text",
+            error: function (data, status) {
+            },
+            success: function (data, status) {
+                $("#Code").show();
+                $("#Code").val("" + data);
+            }
+        });
+    }
+    var readFile = function (file) {
+        if (!$("#Overwrite").is(':checked')) {
+            var found = false;
+            var children = document.getElementById("Files").children;
+            for (var i = 0; i < children.length; i++) {
+                var filename = ("" + children[i].value);
+                if (filename === file.name) {
+                    found = true;
+                    break;
+                }
+            }
+            if (found) {
+                fileMap[file.name] = "duplicate";
+                finishUploading();
+                return;
+            }
+        }
+
+        var fd = new FormData();
+        fd.append('file', file);
+        $.ajax({
+            url: ("/api/general/files/upload?optimize=" + ($("#Optimize").is(':checked') ? "true" : "false") + "&addr=" + path),
+            type: "POST",
+            error: function (data, status) {
+                onerror(data);
+            },
+            success: function (response, status) {
+                fileMap[file.name] = "done"
+                finishUploading();
+            },
+            data: fd,
+            contentType: false,
+            processData: false,
+            xhr: function () {
+                var myXhr = $.ajaxSettings.xhr();
+                if (myXhr.upload) {
+                    myXhr.upload.addEventListener('progress', function (e) {
+                        if (e.lengthComputable) {
+                            var percent = "" + Math.round(e.loaded * 100 / e.total) + "%";
+                            fileMap[file.name] = percent;
+                            var str = "";
+                            for (const [key, value] of Object.entries(fileMap)) {
+                                str += "" + key + " (" + fileMap[key] + ") <br/><br/>";
+                            }
+                            $("#LoadingSpinnerText").html(str);
+                        }
+                    }, false);
+                }
+                return myXhr;
+            }
+        });
+    };
+
+    fileUploadPanel.addEventListener('drop', function (e) {
+        UIkit.modal($("#upload-modal")).hide();
+        showLoading();
+        e.stopPropagation();
+        e.preventDefault();
+        files = e.dataTransfer.files;
+        files = Array.from(files).sort((a, b) => parseInt("" + a.size) - parseInt("" + b.size));
+        uploadedFilesCount = files.length;
+        fileMap = {};
+        console.log("Uploading " + uploadedFilesCount + " files!");
+        for (let i = 0; i < files.length; i++) {
+            console.log("Uploading file: " + files[i].name);
+            fileMap[files[i].name] = "  0%";
+            readFile(files[i]);
+        }
+        document.getElementById("fileLoader").value = "";
+    });
+
+    function handleChange(e) {
+        UIkit.modal($("#upload-modal")).hide();
+        showLoading();
+        files = e.target.files;
+        files = Array.from(files).sort((a, b) => parseInt("" + a.size) - parseInt("" + b.size));
+        uploadedFilesCount = files.length;
+        fileMap = {};
+        console.log("Uploading " + uploadedFilesCount + " files!");
+        for (let i = 0; i < files.length; i++) {
+            console.log("Uploading file: " + files[i].name);
+            fileMap[files[i].name] = "";
+            readFile(files[i]);
+        }
+        document.getElementById("fileLoader").value = "";
+    }
+
+    document.getElementById("ImgElem").addEventListener('load', function () {
+        $("#ImgElem").fadeIn(fadeDelay);
+    });
+
+    function FChange() {
+        $("#VideoElem").attr("src", "");
+        $("#VideoElem").hide();
+        $("#ImgElem").attr("src", "");
+        $("#ImgElem").hide();
+        $("#Code").hide();
+        lastVideo = "";
+        var x = ("" + document.getElementById("Files").value);
+        if (x === selectFileStr) {
+            return;
+        }
+        let ext = x.toLowerCase();
+        ext = ext.substring(ext.lastIndexOf(".") + 1, ext.length);
+        if (ext === "mp4" || ext === "mp3") {
+            $("#VideoElem").attr("src", "/api/general/video/stream?addr=" + path + "/" + encodeURIComponent(x) + "&t=" + (new Date().getTime()));
+            $("#VideoElem").show();
+        } else if (ext === "jpg" || ext === "jpeg" || ext === "png" || ext === "svg" || ext === "pdf") {
+            $("#ImgElem").attr("src", "/api/general/files/open?addr=" + path + "/" + encodeURIComponent(x) + "&t=" + (new Date().getTime()));
+        } else if (ext === "txt" || ext === "java" || ext === "tex" || ext === "html" || ext === "css" || ext === "js" || ext === "xml" || ext === "sh" || ext === "csv" || ext === "log") {
+            openastext(x);
+        } else {
+            notify("primary", "File type not supported!", 2000);
+        }
+    }
+
+    function DChange() {
+        reload();
+    }
+
+    var selectFileStr = "Select a file";
+    var selectFolderStr = "Go to a folder";
+
+    var createOption = function (text) {
+        let option = document.createElement('option');
+        option.style.color = "#ffffff";
+        option.innerHTML = text;
+        return option;
+    };
+
+    function reload(next) {
+        var dir = ("" + document.getElementById("Dirs").value);
+        var oldPath = path;
+        if (dir !== selectFolderStr) {
+            path += (path === "" ? "" : "/") + dir;
+            if (dir === "..") {
+                if (path.replaceAll(".", "").replaceAll("..", "").replaceAll("/", "") !== "") {
+                    path = path.substring(0, path.lastIndexOf("/"));
+                    path = path.substring(0, path.lastIndexOf("/"));
+                }
+            }
+        }
+
+        $("#Dirs").empty();
+        $("#Dirs").append(createOption(selectFolderStr), true);
+
+        $("#VideoElem").attr("src", "");
+        $("#VideoElem").hide();
+        $("#ImgElem").attr("src", "");
+        $("#ImgElem").hide();
+        $("#Code").hide();
+        $("#Files").empty();
+        $("#Files").append(createOption(selectFileStr), true);
+
+        $("#Path").html("Path: " + path);
+        $.ajax({
+            url: ("/api/general/files/list?addr=" + path),
+            type: "GET",
+            error: function (data, status) {
+                onerror(data);
+                path = oldPath;
+                document.getElementById("Dirs").value = selectFolderStr;
+                reload();
+            },
+            success: function (data, status) {
+                $("#Dirs").append(createOption(".."), true);
+
+                for (var key in data) {
+                    let newName = data[key].name.replaceAll(" ", "&nbsp;").trim();
+                    let op = createOption(newName);
+                    if (data[key].isDirectory) {
+                        $("#Dirs").append(op);
+                    } else {
+                        $("#Files").append(op);
+                        if(next) {
+                            let newNext = "" + next.replaceAll(" ", "&nbsp;").replaceAll("\u00a0", "&nbsp;").trim();
+                            if(newNext === newName) {
+                                console.log("yes");
+                                $(op).attr("selected", "true");
+                            }
+                        }
+                    }
+                }
+
+                if(next) {
+                    FChange();
+                }
+
+                /*
+                for (var i = 0; i < window.localStorage.length; i++){
+                    let key = window.localStorage.key(i);
+                    if(!key.startsWith("video ")) {
+                        continue;
+                    }
+                    let found = false;
+                    for (var x in data) {
+                        if(key === "video " + data[x].name) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if(!found) {
+                        window.localStorage.removeItem(key);
+                    }
+                }*/
+            }
+        });
+    }
+
+    $("#Dirs").empty();
+    $("#Dirs").append(createOption("./public"), true);
+    document.getElementById("Dirs").value = "./public"
+    reload();
+
+    var findNext = function (x) {
+        var children = document.getElementById("Files").children;
+        for (var i = 0; i < children.length; i++) {
+            var filename = ("" + children[i].value);
+            if (filename === x) {
+                if (i < children.length - 1) {
+                    return children[i + 1].value;
+                }
+            }
+        }
+        return null;
+    }
+    $("#NextBut").click(function () {
+        var x = ("" + document.getElementById("Files").value);
+        var next = findNext(x);
+        if (next != null) {
+            document.getElementById("Files").value = next;
+            FChange();
+        }
+    });
+    $("#PrevBut").click(function () {
+        var x = ("" + document.getElementById("Files").value);
+        var children = document.getElementById("Files").children;
+        for (var i = 0; i < children.length; i++) {
+            var filename = ("" + children[i].value);
+            if (filename === x) {
+                if (i > 0) {
+                    document.getElementById("Files").value = children[i - 1].value;
+                    FChange();
+                }
+                break;
+            }
+        }
+    });
+    $("#ShuffleBut").click(function () {
+        var x = ("" + document.getElementById("Files").value);
+        var children = document.getElementById("Files").children;
+        document.getElementById("Files").value = children[Math.floor(Math.random() * (children.length - 1)) + 1].value;
+        FChange();
+    });
+    $("#DeleteModel").click(function () {
+        var x = ("" + document.getElementById("Files").value);
+        $("#DeleteMessage").html((x === selectFileStr) ? "Delete current folder with all files?" : "Delete file " + x + "?");
+        UIkit.modal($("#delete-modal")).show();
+    });
+    $("#RenameModel").click(function () {
+        var x = ("" + document.getElementById("Files").value);
+        $("#edit-modal-text").html("Rename");
+        $("#modalField").val((x === selectFileStr) ? path.substring(path.lastIndexOf("/") + 1, path.length) : x);
+        UIkit.modal($("#InputModal")).show();
+        inputModalChoice = "rename";
+    });
+    $("#CreateFolder").click(function () {
+        var x = ("" + document.getElementById("Files").value);
+        $("#edit-modal-text").html("Folder name");
+        $("#modalField").val("folder");
+        UIkit.modal($("#InputModal")).show();
+        inputModalChoice = "createfolder";
+    });
+    $("#CreateFile").click(function () {
+        var x = ("" + document.getElementById("Files").value);
+        $("#edit-modal-text").html("File name");
+        $("#modalField").val("file");
+        UIkit.modal($("#InputModal")).show();
+        inputModalChoice = "createfile";
+    });
+    $("#ExecuteCommand").click(function () {
+        var x = ("" + document.getElementById("Files").value);
+        $("#edit-modal-text").html("Command");
+        $("#modalField").val("");
+        UIkit.modal($("#InputModal")).show();
+        inputModalChoice = "execute";
+    });
+    $("#RefreshDir").click(function () {
+        UIkit.modal($("#option-modal")).hide();
+        reload();
+    });
+    $("#AboutBut").click(function () {
+        UIkit.modal($("#option-modal")).hide();
+        notify("primary", "Masoud Taghavian <br/> https://github.com/mtaghavian <br/> masoud.taghavian@gmail.com <br/> Enjoy :)", 5000);
+    });
+    $("#modalField").keyup(function (e) {
+        if (e.keyCode == 13) {
+            $("#SubmitBut").trigger('click');
+        }
+    });
+    $("#SubmitBut").click(function () {
+        if($("#CloseInputDialog").is(':checked')) {
+            UIkit.modal($("#InputModal")).hide();
+        }
+        var x = ("" + document.getElementById("Files").value);
+        var y = "" + $("#modalField").val();
+        if(inputModalChoice === "rename") {
+            if (x === selectFileStr) {
+                let ny = path.substring(0, path.lastIndexOf("/"));
+                ny += "/" + encodeURIComponent(y);
+                y = ny;
+            }
+            $.ajax({
+                url: "/api/general/files/rename?addr=" + path + ((x === selectFileStr) ? "" : ("/" + encodeURIComponent(x)))
+                    + "&naddr=" + ((x === selectFileStr) ? y : (path + "/" + encodeURIComponent(y))),
+                type: "GET",
+                error: function (data, status) {
+                    onerror(data);
+                },
+                success: function (data, status) {
+                    if (x === selectFileStr) {
+                        path = y;
+                        reload();
+                    } else {
+                        reload(y);
+                    }
+                }
+            });
+        } else if(inputModalChoice === "createfolder") {
+            $.ajax({
+                url: "/api/general/files/createfolder?&addr=" + path + "/" + encodeURIComponent(y),
+                type: "GET",
+                error: function (data, status) {
+                    onerror(data);
+                },
+                success: function (data, status) {
+                    notify("primary", "Folder created successfully!", 5000);
+                    reload();
+                }
+            });
+        } else if(inputModalChoice === "createfile") {
+            $.ajax({
+                url: "/api/general/files/createfile?&addr=" + path + "/" + encodeURIComponent(y),
+                type: "GET",
+                error: function (data, status) {
+                    onerror(data);
+                },
+                success: function (data, status) {
+                    notify("primary", "File created successfully!", 5000);
+                    reload();
+                }
+            });
+        } else if(inputModalChoice === "execute") {
+            $.ajax({
+                url: "/api/general/execute?&addr=" + path,
+                type: "POST",
+                error: function (data, status) {
+                    onerror(data);
+                },
+                success: function (data, status) {
+                    notify("primary", "Command executed successfully! The output can be found on the console!", 5000);
+                    console.log(data);
+                },
+                data: y
+            });
+        }
+    });
+    $("#UploadBut").click(function () {
+        if (files == null) {
+            UIkit.modal($("#upload-modal")).show();
+        } else {
+            showLoading();
+        }
+    });
+    $("#OptionBut").click(function () {
+        var x = ("" + document.getElementById("Files").value);
+        if (x.endsWith(selectFileStr)) {
+            $("#OpenTextBut").hide();
+            $("#DownloadBut").hide();
+            $("#ShareBut").hide();
+        } else {
+            $("#OpenTextBut").show();
+            $("#DownloadBut").show();
+            $("#ShareBut").show();
+        }
+        if (x.endsWith(".jpg") || x.endsWith(".jpeg")) {
+            $("#RotateBut").show();
+        } else {
+            $("#RotateBut").hide();
+        }
+        if (x.endsWith(".jpg") || x.endsWith(".jpeg") || x.endsWith(".mp4")) {
+            $("#OptimizeBut").show();
+        } else {
+            $("#OptimizeBut").hide();
+        }
+        if($("#Code").is(":visible")) {
+            $("#WriteTextBut").show();
+        } else {
+            $("#WriteTextBut").hide();
+        }
+        UIkit.modal($("#option-modal")).show();
+    });
+    $("#DownloadBut").click(function () {
+        UIkit.modal($("#option-modal")).hide();
+        var x = ("" + document.getElementById("Files").value);
+        window.location.href = "/api/general/files/download?addr=" + path + ((x === selectFileStr) ? "" : ("/" + encodeURIComponent(x)));
+    });
+    $("#OpenTextBut").click(function () {
+        UIkit.modal($("#option-modal")).hide();
+        var x = ("" + document.getElementById("Files").value);
+        openastext(x);
+    });
+    $("#WriteTextBut").click(function () {
+        UIkit.modal($("#option-modal")).hide();
+        var x = ("" + document.getElementById("Files").value);
+        const blob = new Blob([$("#Code").val()], {type : 'text/plain'})
+        var fd = new FormData();
+        fd.append('file', blob, x);
+        $.ajax({
+            url: ("/api/general/files/upload?optimize=false" + "&addr=" + path),
+            type: "POST",
+            error: function (data, status) {
+                onerror(data);
+            },
+            success: function (response, status) {
+                notify("primary", "File was written successfully!", 5000);
+            },
+            data: fd,
+            contentType: false,
+            processData: false,
+            xhr: function () {
+                var myXhr = $.ajaxSettings.xhr();
+                if (myXhr.upload) {
+                    myXhr.upload.addEventListener('progress', function (e) {
+                        if (e.lengthComputable) {
+                            var percent = "" + Math.round(e.loaded * 100 / e.total) + "%";
+                        }
+                    }, false);
+                }
+                return myXhr;
+            }
+        });
+    });
+    $("#DetailBut").click(function () {
+        UIkit.modal($("#option-modal")).hide();
+        var x = ("" + document.getElementById("Files").value);
+        if (x === selectFileStr) {
+            return;
+        }
+        $.ajax({
+            url: "/api/general/files/detail?addr=" + path + "/" + encodeURIComponent(x),
+            type: "GET",
+            error: function (data, status) {
+                onerror(data);
+            },
+            success: function (data, status) {
+                notify("primary", data, 5000);
+            }
+        });
+    });
+    $("#RotateBut").click(function () {
+        UIkit.modal($("#option-modal")).hide();
+        var x = ("" + document.getElementById("Files").value);
+        if (x === selectFileStr) {
+            return;
+        }
+        showLoading();
+        $.ajax({
+            url: "/api/general/files/rotate?addr=" + path + "/" + encodeURIComponent(x),
+            type: "GET",
+            error: function (data, status) {
+                hideLoading();
+                onerror(data);
+            },
+            success: function (data, status) {
+                hideLoading();
+                $("#ImgElem").attr("src", "/api/general/files/open?addr=" + path + "/" + encodeURIComponent(x) + "&t=" + (new Date().getTime()));
+            }
+        });
+    });
+    $("#OptimizeBut").click(function () {
+        UIkit.modal($("#option-modal")).hide();
+        var x = ("" + document.getElementById("Files").value);
+        if (x === selectFileStr) {
+            return;
+        }
+        showLoading();
+        $.ajax({
+            url: "/api/general/files/optimize?addr=" + path + "/" + encodeURIComponent(x),
+            type: "GET",
+            error: function (data, status) {
+                hideLoading();
+                onerror(data);
+            },
+            success: function (data, status) {
+                hideLoading();
+                FChange();
+            }
+        });
+    });
+    $("#StreamLink").click(function () {
+        var x = ("" + document.getElementById("Files").value);
+        if (x === selectFileStr) {
+            return;
+        }
+        copyClipboard(window.location.protocol + "//" + window.location.host + "/api/general/video/stream?addr=" + path + "/" + encodeURIComponent(x), "Link copied to clipboard!");
+        UIkit.modal($("#share-modal")).hide();
+    });
+    $("#DownloadLink").click(function () {
+        var x = ("" + document.getElementById("Files").value);
+        if (x === selectFileStr) {
+            return;
+        }
+        copyClipboard(window.location.protocol + "//" + window.location.host + "/api/general/files/download?addr=" + path + "/" + encodeURIComponent(x), "Link copied to clipboard!");
+        UIkit.modal($("#share-modal")).hide();
+    });
+    $("#ShareBut").click(function () {
+        var x = ("" + document.getElementById("Files").value);
+        if (x === selectFileStr) {
+            return;
+        }
+        UIkit.modal($("#option-modal")).hide();
+        if (x.endsWith(".mp4")) {
+            UIkit.modal($("#share-modal")).show();
+        } else {
+            $("#DownloadLink").trigger("click");
+        }
+    });
+    $("#DeleteFile").click(function () {
+        UIkit.modal($("#delete-modal")).hide();
+        var x = ("" + document.getElementById("Files").value);
+        var next = findNext(x);
+        $.ajax({
+            url: "/api/general/files/delete?addr=" + path + ((x === selectFileStr) ? "" : ("/" + encodeURIComponent(x))),
+            type: "GET",
+            error: function (data, status) {
+                onerror(data);
+            },
+            success: function (data, status) {
+                if (x === selectFileStr) {
+                    path = path.substring(0, path.lastIndexOf("/"));
+                }
+                notify("primary", "File deleted successfully!", 5000);
+                reload(next);
+            }
+        });
+    });
+
+    var lastVideo = "";
+    document.getElementById("VideoElem").addEventListener("timeupdate", function () {
+        var x = ("" + document.getElementById("Files").value);
+        if (x === selectFileStr) {
+            lastVideo = "";
+            return;
+        }
+        if (isNaN(this.duration)) {
+            return;
+        }
+        if (lastVideo === x) {
+            window.localStorage.setItem("video " + x, "" + this.currentTime);
+        } else {
+            lastVideo = x;
+            let pos = window.localStorage.getItem("video " + x);
+            if (pos !== null) {
+                document.getElementById("VideoElem").currentTime = pos;
+            }
+        }
+    });
+
+</script>
+</body>
+</html>
