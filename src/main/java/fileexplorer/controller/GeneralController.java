@@ -2,7 +2,6 @@ package fileexplorer.controller;
 
 import fileexplorer.Application;
 import fileexplorer.config.HttpInterceptor;
-import fileexplorer.misc.ImageUtils;
 import fileexplorer.misc.StreamUtils;
 import fileexplorer.misc.SystemUtils;
 import fileexplorer.model.dto.SystemFile;
@@ -26,7 +25,10 @@ import javax.servlet.http.HttpServletResponse;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.URLEncoder;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/general")
@@ -89,12 +91,7 @@ public class GeneralController {
             byte[] data = StreamUtils.readBytes(file.getPath(), start, end);
             String contentLength = "" + data.length;
             HttpStatus httpStatus = (end >= size) ? httpStatus = HttpStatus.OK : HttpStatus.PARTIAL_CONTENT;
-            return Mono.just(ResponseEntity.status(httpStatus)
-                    .header("Content-Type", "" + httpInterceptor.getMediaType(file.getName()))
-                    .header("Accept-Ranges", "bytes")
-                    .header("Content-Length", contentLength)
-                    .header("Content-Range", "bytes " + start + "-" + end + "/" + size)
-                    .body(data));
+            return Mono.just(ResponseEntity.status(httpStatus).header("Content-Type", "" + httpInterceptor.getMediaType(file.getName())).header("Accept-Ranges", "bytes").header("Content-Length", contentLength).header("Content-Range", "bytes " + start + "-" + end + "/" + size).body(data));
         } catch (IOException e) {
             e.printStackTrace();
             return null;
@@ -102,7 +99,7 @@ public class GeneralController {
     }
 
     @GetMapping("/files/open")
-    public void open(HttpServletRequest request, HttpServletResponse response, @RequestParam String addr) throws Exception {
+    public void open(HttpServletRequest request, HttpServletResponse response, @RequestParam String addr, @RequestParam(required = false) String arg1, @RequestParam(required = false) String arg2) throws Exception {
         addr = addr.trim().replace("\u00a0", " ");
 
         File file = new File(addr);
@@ -116,13 +113,12 @@ public class GeneralController {
         if (addr.toLowerCase().endsWith(".pdf")) {
             PDDocument document = PDDocument.load(inputStream);
             PDFRenderer pdfRenderer = new PDFRenderer(document);
-            List<BufferedImage> images = new ArrayList<>();
-            for (int i = 0; i < Math.min(document.getNumberOfPages(), 10); i++) {
-                images.add(pdfRenderer.renderImageWithDPI(i, 350, ImageType.RGB));
-            }
+            int page = Math.min(document.getNumberOfPages() - 1, Integer.parseInt(arg1));
+            int dpi = Integer.parseInt(arg2);
+            BufferedImage img = pdfRenderer.renderImageWithDPI(page, dpi, ImageType.RGB);
             document.close();
             ByteArrayOutputStream os = new ByteArrayOutputStream();
-            ImageIO.write(ImageUtils.merge(images, true, true), "jpg", os);
+            ImageIO.write(img, "jpg", os);
             response.setContentType("image/jpg");
             response.getOutputStream().write(os.toByteArray());
         } else {
@@ -166,15 +162,7 @@ public class GeneralController {
             String contentLength = "" + (size - start);
 
             HttpStatus httpStatus = (range == null) ? HttpStatus.OK : HttpStatus.PARTIAL_CONTENT;
-            return Mono.just(ResponseEntity.status(httpStatus)
-                    .header("Content-Type", "" + httpInterceptor.getMediaType(sendFile.getName()))
-                    .header("Content-Disposition", "attachment; "
-                            + "filename=\"" + sendFile.getName() + "\"; "
-                            + "filename*=UTF-8''" + URLEncoder.encode(sendFile.getName(), "UTF-8").replace("+", "%20"))
-                    .header("Accept-Ranges", "bytes")
-                    .header("Content-Length", contentLength)
-                    .header("Content-Range", "bytes " + start + "-" + (size - 1) + "/" + contentLength)
-                    .body(new InputStreamResource(fileInputStream)));
+            return Mono.just(ResponseEntity.status(httpStatus).header("Content-Type", "" + httpInterceptor.getMediaType(sendFile.getName())).header("Content-Disposition", "attachment; " + "filename=\"" + sendFile.getName() + "\"; " + "filename*=UTF-8''" + URLEncoder.encode(sendFile.getName(), "UTF-8").replace("+", "%20")).header("Accept-Ranges", "bytes").header("Content-Length", contentLength).header("Content-Range", "bytes " + start + "-" + (size - 1) + "/" + contentLength).body(new InputStreamResource(fileInputStream)));
         } catch (Exception ioex) {
             throw new RuntimeException("Exception while reading file: " + addr);
         }
@@ -250,13 +238,18 @@ public class GeneralController {
     }
 
     @GetMapping(value = "/files/detail")
-    public String detail(HttpServletRequest request, HttpServletResponse response, @RequestParam String addr) throws IOException {
+    public SystemFile detail(HttpServletRequest request, HttpServletResponse response, @RequestParam String addr) throws IOException {
         addr = addr.trim().replace("\u00a0", " ");
         File file = new File(addr);
         if (!file.exists()) {
             throw new RuntimeException("File not found! Name = " + addr);
         }
-        return "Name: " + file.getName() + "<br/>Size: " + StreamUtils.toHumanReadableSIPrefixes(file.length()) + "<br/>MDate: " + new Date(file.lastModified()).toString();
+        SystemFile f = new SystemFile();
+        f.setName(file.getName());
+        f.setLength(file.length());
+        f.setIsDirectory(file.isDirectory());
+        f.setMdate(file.lastModified());
+        return f;
     }
 
     @GetMapping(value = "/files/rotate")
@@ -310,6 +303,7 @@ public class GeneralController {
             ent.setName(file.getName());
             ent.setIsDirectory(file.isDirectory());
             ent.setLength(file.length());
+            ent.setMdate(file.lastModified());
             list.add(ent);
         }
         Collections.sort(list, Comparator.comparing(SystemFile::getIsDirectory).reversed().thenComparing(SystemFile::getName));

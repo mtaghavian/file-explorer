@@ -1,6 +1,7 @@
 package fileexplorer;
 
 import fileexplorer.config.HttpInterceptor;
+import fileexplorer.config.WebRTCController;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
@@ -16,15 +17,18 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.multipart.commons.CommonsMultipartResolver;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
+import org.springframework.web.socket.config.annotation.EnableWebSocket;
+import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
+import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
-//@EnableZuulProxy
 @SpringBootApplication(exclude = ErrorMvcAutoConfiguration.class)
 @EnableScheduling
+@EnableWebSocket
 public class Application implements ApplicationContextAware {
 
     public static final String appName = "File-Explorer",
@@ -93,6 +97,15 @@ public class Application implements ApplicationContextAware {
         @Override
         public void addInterceptors(InterceptorRegistry registry) {
             registry.addInterceptor(serviceInterceptor);
+        }
+    }
+
+    @Configuration
+    public class WSConfig implements WebSocketConfigurer {
+
+        @Override
+        public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
+            registry.addHandler(new WebRTCController(), "/webrtc").setAllowedOrigins("*");
         }
     }
 

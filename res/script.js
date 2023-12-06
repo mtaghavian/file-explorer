@@ -133,19 +133,14 @@ function handleUIVersion() {
     });
 }
 
-function humanFileSize(bytes, si=true, dp=1) {
-    const thresh = si ? 1000 : 1024;
-    if (Math.abs(bytes) < thresh) {
-        return bytes + '\xa0';
+function humanFileSize(size) {
+    var units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+    var i = 0;
+    while(size >= 1024) {
+        size /= 1024;
+        ++i;
     }
-    const units = ['KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-    let u = -1;
-    const r = 10**dp;
-    do {
-        bytes /= thresh;
-        ++u;
-    } while (Math.round(Math.abs(bytes) * r) / r >= thresh && u < units.length - 1);
-    return bytes.toFixed(dp) + '\xa0' + units[u];
+    return size.toFixed(1) + ' ' + units[i];
 }
 
 function load(addr) {

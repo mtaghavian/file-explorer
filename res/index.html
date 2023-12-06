@@ -71,9 +71,9 @@
     </div>
     <br/>
 
-    <div style="width: 100%; text-align: center;">
-        <video id="VideoElem" style="display: none; max-height: 100%; max-width: 100%;" controls autoplay controlsList="nodownload" loop="true" name="media" oncontextmenu="return false;"></video>
-        <img id="ImgElem" style="display: none; max-height: 100%; max-width: 100%;">
+    <div style="width: 100%; text-align: center; overflow: auto; max-height: calc(100% - 200px);">
+        <video id="VideoElem" style="display: none; max-width: 100%; " controls autoplay controlsList="nodownload" loop="true" name="media" oncontextmenu="return false;"></video>
+        <img id="ImgElem" style="display: none; max-width: 100%;">
         <textarea id="Code" spellcheck="false" name="Code" style="display: none; height: calc(100% - 180px); min-width: 100%;"></textarea>
     </div>
 </div>
@@ -112,8 +112,22 @@
 <div id="option-modal" class="uk-flex-top" uk-modal>
     <div class="uk-modal-dialog uk-margin-auto-vertical Centered" style="padding: 0px;">
         <ul class="uk-nav uk-dropdown-nav" style="text-align: center;">
+            <li><a id="PDFParam" class="ModalButtons" href="#"><img src="gear.svg" style="display: inline-block; width: 15px; margin-right: 15px;">
+                Set PDF page and DPI</a></li>
+            <li><a id="OpenTextBut" class="ModalButtons" href="#"><img src="eye.svg" style="display: inline-block; width: 15px; margin-right: 15px;">
+                Open as text</a></li>
+            <li><a id="WriteTextBut" class="ModalButtons" href="#"><img src="save.svg" style="display: inline-block; width: 15px; margin-right: 15px;">
+                Save as text</a></li>
+            <li><a id="RotateBut" class="ModalButtons" href="#"><img src="refresh.svg" style="display: inline-block; width: 15px; margin-right: 15px;">
+                Rotate</a></li>
+            <li><a id="OptimizeBut" class="ModalButtons" href="#"><img src="optimize.svg" style="display: inline-block; width: 15px; margin-right: 15px;">
+                Optimize</a></li>
+            <li><a id="DownloadBut" class="ModalButtons" href="#"><img src="download.svg" style="display: inline-block; width: 15px; margin-right: 15px;">
+                Download</a></li>
             <li><a id="UploadBut" class="ModalButtons" href="#"><img src="upload.svg" style="display: inline-block; width: 15px; margin-right: 15px;">
                 Upload files</a></li>
+            <li><a id="ShareBut" class="ModalButtons" href="#"><img src="share.svg" style="display: inline-block; width: 15px; margin-right: 15px;">
+                Share</a></li>
             <li><a id="CreateFolder" class="ModalButtons" href="#"><img src="plus.svg" style="display: inline-block; width: 10px; margin-right: 15px;">
                 Create a new folder</a></li>
             <li><a id="CreateFile" class="ModalButtons" href="#"><img src="plus.svg" style="display: inline-block; width: 10px; margin-right: 15px;">
@@ -122,18 +136,6 @@
                 Execute a command</a></li>
             <li><a id="RefreshDir" class="ModalButtons" href="#"><img src="refresh.svg" style="display: inline-block; width: 15px; margin-right: 15px;">
                 Refresh</a></li>
-            <li><a id="OpenTextBut" class="ModalButtons" href="#"><img src="eye.svg" style="display: inline-block; width: 15px; margin-right: 15px;">
-                Open as text</a></li>
-            <li><a id="WriteTextBut" class="ModalButtons" href="#"><img src="save.svg" style="display: inline-block; width: 15px; margin-right: 15px;">
-                Save as text</a></li>
-            <li><a id="DownloadBut" class="ModalButtons" href="#"><img src="download.svg" style="display: inline-block; width: 15px; margin-right: 15px;">
-                Download</a></li>
-            <li><a id="ShareBut" class="ModalButtons" href="#"><img src="share.svg" style="display: inline-block; width: 15px; margin-right: 15px;">
-                Share</a></li>
-            <li><a id="RotateBut" class="ModalButtons" href="#"><img src="refresh.svg" style="display: inline-block; width: 15px; margin-right: 15px;">
-                Rotate</a></li>
-            <li><a id="OptimizeBut" class="ModalButtons" href="#"><img src="optimize.svg" style="display: inline-block; width: 15px; margin-right: 15px;">
-                Optimize</a></li>
             <li><a id="AboutBut" class="ModalButtons" href="#"><img src="info.svg" style="display: inline-block; width: 15px; margin-right: 15px;">
                 About</a></li>
         </ul>
@@ -191,6 +193,8 @@
     var files = null;
     var uploadedFilesCount = 0;
     var fileMap = {};
+    var pdfPage = 0;
+    var pdfDPI = 200;
     var finishUploading = function () {
         uploadedFilesCount--;
         if (uploadedFilesCount === 0) {
@@ -208,8 +212,8 @@
             error: function (data, status) {
             },
             success: function (data, status) {
-                $("#Code").show();
                 $("#Code").val("" + data);
+                $("#Code").fadeIn(fadeDelay);
             }
         });
     }
@@ -319,10 +323,19 @@
         ext = ext.substring(ext.lastIndexOf(".") + 1, ext.length);
         if (ext === "mp4" || ext === "mp3") {
             $("#VideoElem").attr("src", "/api/general/video/stream?addr=" + path + "/" + encodeURIComponent(x) + "&t=" + (new Date().getTime()));
-            $("#VideoElem").show();
-        } else if (ext === "jpg" || ext === "jpeg" || ext === "png" || ext === "svg" || ext === "pdf") {
+            $("#VideoElem").fadeIn(fadeDelay);
+        } else if (ext === "jpg" || ext === "jpeg" || ext === "png" || ext === "svg") {
             $("#ImgElem").attr("src", "/api/general/files/open?addr=" + path + "/" + encodeURIComponent(x) + "&t=" + (new Date().getTime()));
-        } else if (ext === "txt" || ext === "java" || ext === "tex" || ext === "html" || ext === "css" || ext === "js" || ext === "xml" || ext === "sh" || ext === "csv" || ext === "log") {
+        } else if (ext === "pdf") {
+            pdfPage = 0;
+            pdfDPI = 200;
+            let pdfParam = window.localStorage.getItem("pdfParam " + x);
+            if (pdfParam !== null) {
+                pdfPage = parseInt(pdfParam.split(" ")[0]);
+                pdfDPI = parseInt(pdfParam.split(" ")[1]);
+            }
+            $("#ImgElem").attr("src", "/api/general/files/open?addr=" + path + "/" + encodeURIComponent(x) + "&t=" + (new Date().getTime()) + "&arg1=" + pdfPage + "&arg2=" + pdfDPI);
+        } else if (ext === "txt" || ext === "conf" || ext === "h" || ext === "cpp" || ext === "c" || ext === "java" || ext === "py" || ext === "tex" || ext === "html" || ext === "css" || ext === "js" || ext === "xml" || ext === "sh" || ext === "csv" || ext === "log") {
             openastext(x);
         } else {
             notify("primary", "File type not supported!", 2000);
@@ -344,6 +357,7 @@
     };
 
     function reload(next) {
+        var x = ("" + document.getElementById("Files").value);
         var dir = ("" + document.getElementById("Dirs").value);
         var oldPath = path;
         if (dir !== selectFolderStr) {
@@ -390,7 +404,6 @@
                         if(next) {
                             let newNext = "" + next.replaceAll(" ", "&nbsp;").replaceAll("\u00a0", "&nbsp;").trim();
                             if(newNext === newName) {
-                                console.log("yes");
                                 $(op).attr("selected", "true");
                             }
                         }
@@ -500,6 +513,13 @@
         UIkit.modal($("#InputModal")).show();
         inputModalChoice = "execute";
     });
+    $("#PDFParam").click(function () {
+        var x = ("" + document.getElementById("Files").value);
+        $("#edit-modal-text").html("Set PDF Page and DPI seperated by space");
+        $("#modalField").val("" + pdfPage + " " + pdfDPI);
+        UIkit.modal($("#InputModal")).show();
+        inputModalChoice = "pdfParam";
+    });
     $("#RefreshDir").click(function () {
         UIkit.modal($("#option-modal")).hide();
         reload();
@@ -550,7 +570,7 @@
                 },
                 success: function (data, status) {
                     notify("primary", "Folder created successfully!", 5000);
-                    reload();
+                    reload(x);
                 }
             });
         } else if(inputModalChoice === "createfile") {
@@ -562,7 +582,7 @@
                 },
                 success: function (data, status) {
                     notify("primary", "File created successfully!", 5000);
-                    reload();
+                    reload(x);
                 }
             });
         } else if(inputModalChoice === "execute") {
@@ -578,6 +598,11 @@
                 },
                 data: y
             });
+        } else if(inputModalChoice === "pdfParam") {
+            pdfPage = parseInt(y.split(" ")[0]);
+            pdfDPI = parseInt(y.split(" ")[1]);
+            window.localStorage.setItem("pdfParam " + x, "" + y);
+            $("#ImgElem").attr("src", "/api/general/files/open?addr=" + path + "/" + encodeURIComponent(x) + "&t=" + (new Date().getTime()) + "&arg1=" + pdfPage + "&arg2=" + pdfDPI);
         }
     });
     $("#UploadBut").click(function () {
@@ -602,6 +627,11 @@
             $("#RotateBut").show();
         } else {
             $("#RotateBut").hide();
+        }
+        if (x.endsWith(".pdf")) {
+            $("#PDFParam").show();
+        } else {
+            $("#PDFParam").hide();
         }
         if (x.endsWith(".jpg") || x.endsWith(".jpeg") || x.endsWith(".mp4")) {
             $("#OptimizeBut").show();
@@ -656,6 +686,12 @@
             }
         });
     });
+    document.addEventListener('keydown', e => {
+        if (e.ctrlKey && e.key === 's') {
+            e.preventDefault();
+            $("#WriteTextBut").trigger('click');
+        }
+    });
     $("#DetailBut").click(function () {
         UIkit.modal($("#option-modal")).hide();
         var x = ("" + document.getElementById("Files").value);
@@ -669,7 +705,11 @@
                 onerror(data);
             },
             success: function (data, status) {
-                notify("primary", data, 5000);
+                let msg = "";
+                msg += "Name: " + data.name + "<br/>";
+                msg += "Size: " + humanFileSize(data.length) + "<br/>";
+                msg += "Last modified: " + new Date(parseInt(data.mdate)).toString();
+                notify("primary", msg, 5000);
             }
         });
     });

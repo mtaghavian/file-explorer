@@ -14,4 +14,6 @@ public class SystemFile {
     private Long length;
 
     private Boolean isDirectory;
+
+    private Long mdate;
 }
