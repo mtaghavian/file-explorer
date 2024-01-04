@@ -42,7 +42,7 @@ public class WebRTCController implements WebSocketHandler {
             return Collections.singletonList(list.get(index));
         } else if (op == 3) { // search
             List<Session> slist = new ArrayList<>();
-            for (int i = 0; i < list.size(); i++) {
+            for (int i = list.size() - 1; i >= 0; i--) {
                 if (wss.equals(list.get(i).getWss())) {
                     continue;
                 }
@@ -70,9 +70,9 @@ public class WebRTCController implements WebSocketHandler {
         TextMessage textMsg = (TextMessage) msg;
         String payload = textMsg.getPayload();
         WebRTCMessage webrtcMsg = null;
-        try{
+        try {
             webrtcMsg = objectMapper.readValue(payload, WebRTCMessage.class);
-        }catch (Exception ex){
+        } catch (Exception ex) {
             System.out.println();
         }
 

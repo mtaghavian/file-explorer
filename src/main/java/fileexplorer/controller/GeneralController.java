@@ -5,6 +5,7 @@ import fileexplorer.config.HttpInterceptor;
 import fileexplorer.misc.StreamUtils;
 import fileexplorer.misc.SystemUtils;
 import fileexplorer.model.dto.SystemFile;
+import org.apache.commons.fileupload.disk.DiskFileItem;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
@@ -15,6 +16,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.commons.CommonsMultipartFile;
 import org.zeroturnaround.zip.ZipUtil;
 import reactor.core.publisher.Mono;
 
@@ -24,11 +26,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
 import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/general")
@@ -50,6 +51,53 @@ public class GeneralController {
         }
     }
 
+
+    @GetMapping("/systemInfo")
+    public void system(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        Runtime runtime = Runtime.getRuntime();
+        String lineBreak = "\n";
+        String separator = "=";
+        sb.append("availableProcessors" + separator + runtime.availableProcessors()).append(lineBreak);
+        sb.append("freeMemory" + separator + runtime.freeMemory()).append(lineBreak);
+        sb.append("maxMemory" + separator + runtime.maxMemory()).append(lineBreak);
+        sb.append("totalMemory" + separator + runtime.totalMemory()).append(lineBreak);
+        File file = new File(".");
+        sb.append("getFreeSpace" + separator + file.getFreeSpace()).append(lineBreak);
+        sb.append("getUsableSpace" + separator + file.getUsableSpace()).append(lineBreak);
+        sb.append("getTotalSpace" + separator + file.getTotalSpace()).append(lineBreak);
+        for (Object prop : System.getProperties().keySet()) {
+            sb.append(prop + separator + System.getProperty(prop.toString())).append(lineBreak);
+        }
+        StreamUtils.responseOnHtml(response, sb.toString(), false);
+    }
+
+    @GetMapping("/clientIP")
+    public void clientIP(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        StreamUtils.responseOnHtml(resp, StreamUtils.getUserAddressDesc(req), false);
+    }
+
+    @GetMapping("/serverIP")
+    public void serverIP(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        String lineBreak = "\n";
+        ArrayList<NetworkInterface> list = Collections.list(NetworkInterface.getNetworkInterfaces());
+        for (int i = 0; i < list.size(); i++) {
+            NetworkInterface adapter = list.get(i);
+            sb.append("Interface #" + i + lineBreak);
+            sb.append("Display name: " + adapter.getDisplayName() + lineBreak);
+            sb.append("Name: " + adapter.getName() + lineBreak);
+            sb.append("Index: " + adapter.getIndex() + lineBreak);
+            Enumeration<InetAddress> inetAddresses = adapter.getInetAddresses();
+            ArrayList<InetAddress> addressList = Collections.list(inetAddresses);
+            for (int j = 0; j < addressList.size(); j++) {
+                sb.append("Address[" + j + "] " + addressList.get(j).getHostName() + "=" + addressList.get(j).getHostAddress() + lineBreak);
+            }
+            sb.append(lineBreak);
+        }
+        StreamUtils.responseOnHtml(resp, sb.toString(), false);
+    }
+
     @GetMapping("/shutdown")
     public void shutdown(HttpServletRequest request, HttpServletResponse response) throws IOException {
         Application.shutdown();
@@ -63,9 +111,12 @@ public class GeneralController {
     }
 
     @PostMapping("/execute")
-    public String execute(HttpServletRequest request, HttpServletResponse response, @RequestParam String addr, @RequestBody String cmd) {
+    public String execute(HttpServletRequest request, HttpServletResponse response, @RequestParam String addr, @RequestBody(required = false) String cmd) throws IOException {
         addr = addr.trim().replace("\u00a0", " ");
-        return SystemUtils.execute(addr, cmd);
+        if (cmd == null) {
+            cmd = "";
+        }
+        return SystemUtils.executeSingleCommand(addr, cmd);
     }
 
     @GetMapping("/video/stream")
@@ -139,12 +190,13 @@ public class GeneralController {
 
         final File originalFile = new File(addr);
         File sendFile = null;
+        String zipFileName = originalFile.getName() + ".zip";
         try {
             if (!originalFile.exists()) {
                 throw new RuntimeException("File not found! Name = " + addr);
             }
             if (originalFile.isDirectory()) {
-                sendFile = new File(originalFile.getName() + ".zip");
+                sendFile = new File(zipFileName);
                 ZipUtil.pack(originalFile, sendFile);
             } else {
                 sendFile = originalFile;
@@ -157,7 +209,15 @@ public class GeneralController {
                 start = Long.parseLong(ranges[0].substring(6));
             }
 
-            FileInputStream fileInputStream = new FileInputStream(sendFile);
+            FileInputStream fileInputStream = new FileInputStream(sendFile) {
+                @Override
+                public void close() throws IOException {
+                    super.close();
+                    if (originalFile.isDirectory()) {
+                        new File(zipFileName).delete();
+                    }
+                }
+            };
             fileInputStream.skip(start);
             String contentLength = "" + (size - start);
 
@@ -171,20 +231,28 @@ public class GeneralController {
     @PostMapping(value = "/files/upload")
     @ResponseBody
     public void uploadFile(HttpServletRequest request, HttpServletResponse response, @RequestParam(required = false, defaultValue = "false") String optimize, @RequestParam String addr, @RequestParam("file") MultipartFile[] files) throws IOException {
-        for (MultipartFile file : files) {
-            File fileObj = new File(addr + "/" + file.getOriginalFilename());
+        for (MultipartFile mfile : files) {
+            String filePath = addr + "/" + mfile.getOriginalFilename();
+            File file = new File(filePath);
+            if (file.exists()) {
+                file.delete();
+            }
+            if (mfile.getSize() == 0) {
+                FileOutputStream fos = new FileOutputStream(file);
+                fos.close();
+            } else {
+                File store = ((DiskFileItem) ((CommonsMultipartFile) mfile).getFileItem()).getStoreLocation();
+                store.renameTo(file);
+            }
             try {
-                FileOutputStream os = new FileOutputStream(fileObj);
-                StreamUtils.copy(file.getInputStream(), os, false, true);
-
                 if (optimize.equals("true")) {
-                    String fname = fileObj.getName().trim().toLowerCase();
+                    String fname = file.getName().trim().toLowerCase();
                     if (fname.endsWith(".jpg") || fname.endsWith(".jpeg")) {
-                        optimize(request, response, fileObj.getPath());
+                        optimize(request, response, file.getPath());
                     }
                 }
             } catch (Exception e) {
-                fileObj.delete();
+                file.delete();
             }
         }
     }
@@ -262,7 +330,7 @@ public class GeneralController {
         String fname = file.getName().trim().toLowerCase();
         if (fname.endsWith(".jpg") || fname.endsWith(".jpeg")) {
             File tempFile = new File("" + System.currentTimeMillis() + "-" + fname);
-            String out = SystemUtils.execute(null, "ffmpeg -loglevel error -threads 1 -y -i \"" + addr + "\" -vf transpose=1 \"" + tempFile.getPath() + "\"");
+            String out = SystemUtils.executeInBash(null, "ffmpeg -loglevel error -threads 1 -y -i \"" + addr + "\" -vf transpose=1 \"" + tempFile.getPath() + "\"");
             if (out != null) {
                 file.delete();
                 tempFile.renameTo(file);
@@ -279,7 +347,7 @@ public class GeneralController {
         }
         String fname = file.getName().trim().toLowerCase();
         File tempFile = new File("" + System.currentTimeMillis() + "-" + fname);
-        String out = SystemUtils.execute(null, "ffmpeg -loglevel error -threads 1 -y -i \"" + addr + "\" \"" + tempFile.getPath() + "\"");
+        String out = SystemUtils.executeInBash(null, "ffmpeg -loglevel error -threads 1 -y -i \"" + addr + "\" \"" + tempFile.getPath() + "\"");
         if (out != null) {
             file.delete();
             tempFile.renameTo(file);
@@ -309,4 +377,5 @@ public class GeneralController {
         Collections.sort(list, Comparator.comparing(SystemFile::getIsDirectory).reversed().thenComparing(SystemFile::getName));
         return list;
     }
+
 }

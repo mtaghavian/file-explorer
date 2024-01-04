@@ -1,7 +1,5 @@
 package fileexplorer.misc;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import fileexplorer.Application;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -315,10 +313,6 @@ public class StreamUtils {
         return baos.toByteArray();
     }
 
-    public static String getUserAddress(HttpServletRequest req) {
-        return req.getRemoteAddr();
-    }
-
     public static String getUserAddressExtended(HttpServletRequest req) {
         StringBuilder sb = new StringBuilder();
         String separator = ": ";
@@ -344,5 +338,14 @@ public class StreamUtils {
         }
         sb.append("REMOTE_ADDR" + separator + req.getRemoteAddr());
         return sb.toString();
+    }
+
+    public static String getUserAddressDesc(HttpServletRequest req) throws Exception {
+        String url = "http://ipwho.is/" + req.getRemoteAddr();
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        HttpEntity entity = new HttpEntity(headers);
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+        return response.getBody();
     }
 }

@@ -52,7 +52,6 @@ public class HttpInterceptor implements HandlerInterceptor {
         return true;
     }
 
-
     private boolean replyImmediately(String uri, HttpServletRequest request, HttpServletResponse response) throws Exception {
         if (uri.equals("/api/clearCache")) {
             StreamUtils.responseOnHtml(response, "Done!", true);
@@ -68,10 +67,8 @@ public class HttpInterceptor implements HandlerInterceptor {
         response.setHeader("Access-Control-Allow-Methods", "GET,POST,DELETE,PUT,OPTIONS");
         response.setHeader("Access-Control-Allow-Headers", "*");
         response.setHeader("Access-Control-Allow-Credentials", "" + true);
-        response.setHeader("Access-Control-Max-Age", "3000");
-        response.setHeader("Cache-Control", "max-age=" + "3000");
-        //response.setHeader("Access-Control-Max-Age", "31536000");
-        //response.setHeader("Cache-Control", "max-age=31536000, s-maxage=31536000, immutable");
+        response.setHeader("Access-Control-Max-Age", Application.appConfig.getProperty("max-age"));
+        response.setHeader("Cache-Control", "max-age=" + Application.appConfig.getProperty("max-age"));
 
         File file = new File(Application.resPath + uri);
         if (!uri.contains("/../") && file.exists()) {

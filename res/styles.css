@@ -70,16 +70,18 @@ body {
     line-height: 60px;
     text-align: left;
     flex: auto;
-    overflow: hidden;
     vertical-align: middle;
+    overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     padding-left: 5px;
 }
 
 .ModalButtons {
-    padding: 20px !important;;
-    font-size: 110% !important;;
+    padding: 20px !important;
+    font-size: 110% !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .FileEntrySize {

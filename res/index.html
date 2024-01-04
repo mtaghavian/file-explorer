@@ -116,7 +116,7 @@
                 Set PDF page and DPI</a></li>
             <li><a id="OpenTextBut" class="ModalButtons" href="#"><img src="eye.svg" style="display: inline-block; width: 15px; margin-right: 15px;">
                 Open as text</a></li>
-            <li><a id="WriteTextBut" class="ModalButtons" href="#"><img src="save.svg" style="display: inline-block; width: 15px; margin-right: 15px;">
+            <li><a id="SaveTextBut" class="ModalButtons" href="#"><img src="save.svg" style="display: inline-block; width: 15px; margin-right: 15px;">
                 Save as text</a></li>
             <li><a id="RotateBut" class="ModalButtons" href="#"><img src="refresh.svg" style="display: inline-block; width: 15px; margin-right: 15px;">
                 Rotate</a></li>
@@ -163,7 +163,7 @@
     $("#Code").hide();
 
     var path = "";
-    var inputModalChoice = "rename";
+    var inputModalChoice = "";
 
     function getUrlVars() {
         var vars = [], hash;
@@ -335,7 +335,9 @@
                 pdfDPI = parseInt(pdfParam.split(" ")[1]);
             }
             $("#ImgElem").attr("src", "/api/general/files/open?addr=" + path + "/" + encodeURIComponent(x) + "&t=" + (new Date().getTime()) + "&arg1=" + pdfPage + "&arg2=" + pdfDPI);
-        } else if (ext === "txt" || ext === "conf" || ext === "h" || ext === "cpp" || ext === "c" || ext === "java" || ext === "py" || ext === "tex" || ext === "html" || ext === "css" || ext === "js" || ext === "xml" || ext === "sh" || ext === "csv" || ext === "log") {
+        } else if (ext === "txt" || ext === "conf" || ext === "h" || ext === "hpp" || ext === "c" || ext === "cpp" || ext === "java"
+            || ext === "py" || ext === "tex" || ext === "html" || ext === "css" || ext === "js" || ext === "xml"
+            || ext === "sh" || ext === "csv" || ext === "log" || ext === "json" || ext === "sls") {
             openastext(x);
         } else {
             notify("primary", "File type not supported!", 2000);
@@ -616,12 +618,8 @@
         var x = ("" + document.getElementById("Files").value);
         if (x.endsWith(selectFileStr)) {
             $("#OpenTextBut").hide();
-            $("#DownloadBut").hide();
-            $("#ShareBut").hide();
         } else {
             $("#OpenTextBut").show();
-            $("#DownloadBut").show();
-            $("#ShareBut").show();
         }
         if (x.endsWith(".jpg") || x.endsWith(".jpeg")) {
             $("#RotateBut").show();
@@ -639,23 +637,24 @@
             $("#OptimizeBut").hide();
         }
         if($("#Code").is(":visible")) {
-            $("#WriteTextBut").show();
+            $("#SaveTextBut").show();
         } else {
-            $("#WriteTextBut").hide();
+            $("#SaveTextBut").hide();
         }
         UIkit.modal($("#option-modal")).show();
     });
     $("#DownloadBut").click(function () {
         UIkit.modal($("#option-modal")).hide();
-        var x = ("" + document.getElementById("Files").value);
-        window.location.href = "/api/general/files/download?addr=" + path + ((x === selectFileStr) ? "" : ("/" + encodeURIComponent(x)));
+        let x = ("" + document.getElementById("Files").value);
+        let dlink = "/api/general/files/download?addr=" + path + ((x === selectFileStr) ? "" : ("/" + encodeURIComponent(x)));
+        window.location.href = dlink;
     });
     $("#OpenTextBut").click(function () {
         UIkit.modal($("#option-modal")).hide();
         var x = ("" + document.getElementById("Files").value);
         openastext(x);
     });
-    $("#WriteTextBut").click(function () {
+    $("#SaveTextBut").click(function () {
         UIkit.modal($("#option-modal")).hide();
         var x = ("" + document.getElementById("Files").value);
         const blob = new Blob([$("#Code").val()], {type : 'text/plain'})
@@ -689,7 +688,11 @@
     document.addEventListener('keydown', e => {
         if (e.ctrlKey && e.key === 's') {
             e.preventDefault();
-            $("#WriteTextBut").trigger('click');
+            $("#SaveTextBut").trigger('click');
+        }
+        if (e.ctrlKey && e.key === 'o') {
+            e.preventDefault();
+            $("#OpenTextBut").trigger('click');
         }
     });
     $("#DetailBut").click(function () {
@@ -763,17 +766,12 @@
     });
     $("#DownloadLink").click(function () {
         var x = ("" + document.getElementById("Files").value);
-        if (x === selectFileStr) {
-            return;
-        }
-        copyClipboard(window.location.protocol + "//" + window.location.host + "/api/general/files/download?addr=" + path + "/" + encodeURIComponent(x), "Link copied to clipboard!");
+        let dlink = "/api/general/files/download?addr=" + path + ((x === selectFileStr) ? "" : ("/" + encodeURIComponent(x)));
+        copyClipboard(window.location.protocol + "//" + window.location.host + dlink, "Link copied to clipboard!");
         UIkit.modal($("#share-modal")).hide();
     });
     $("#ShareBut").click(function () {
         var x = ("" + document.getElementById("Files").value);
-        if (x === selectFileStr) {
-            return;
-        }
         UIkit.modal($("#option-modal")).hide();
         if (x.endsWith(".mp4")) {
             UIkit.modal($("#share-modal")).show();

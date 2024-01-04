@@ -347,3 +347,48 @@ function hideLoading() {
     $("#LoadingSpinner").hide();
     UIkit.modal($("#LoadingSpinner")).hide();
 }
+
+var mediaRecorder = null;
+var recordedChunks = [];
+function recordStream(stream) {
+    if(mediaRecorder != null) {
+        return;
+    }
+    notify("primary", "Recording started! Recording can be stopped manually or by changing the current stream (changing the camera source or stopping the screen sharing)!", 5000);
+    const mimeType = 'video/webm';
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = function (e) {
+        if (e.data.size > 0) {
+            recordedChunks.push(e.data);
+        }
+    };
+    mediaRecorder.onstop = function () {
+        notify("primary", "Recording finished!", 5000);
+        let blob = new Blob(recordedChunks, {
+            type: mimeType
+        });
+        let filename = "screen.webm";
+        let downloadLink = document.createElement('a');
+        downloadLink.href = URL.createObjectURL(blob);
+        downloadLink.download = filename;
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        URL.revokeObjectURL(blob);
+        document.body.removeChild(downloadLink);
+        mediaRecorder = null;
+        recordedChunks = [];
+    };
+    mediaRecorder.start(300);
+    stream.getVideoTracks()[0].addEventListener('ended', () => {
+        if(mediaRecorder == null) {
+            return;
+        }
+        mediaRecorder.stop();
+    });
+}
+function stopRecording() {
+    if(mediaRecorder == null) {
+        return;
+    }
+    mediaRecorder.stop();
+}
