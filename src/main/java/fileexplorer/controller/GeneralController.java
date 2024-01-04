@@ -330,7 +330,7 @@ public class GeneralController {
         String fname = file.getName().trim().toLowerCase();
         if (fname.endsWith(".jpg") || fname.endsWith(".jpeg")) {
             File tempFile = new File("" + System.currentTimeMillis() + "-" + fname);
-            String out = SystemUtils.executeInBash(null, "ffmpeg -loglevel error -threads 1 -y -i \"" + addr + "\" -vf transpose=1 \"" + tempFile.getPath() + "\"");
+            String out = SystemUtils.executeSingleCommand(null, "ffmpeg -loglevel error -threads 1 -y -i \"" + addr + "\" -vf transpose=1 \"" + tempFile.getPath() + "\"");
             if (out != null) {
                 file.delete();
                 tempFile.renameTo(file);
@@ -347,7 +347,7 @@ public class GeneralController {
         }
         String fname = file.getName().trim().toLowerCase();
         File tempFile = new File("" + System.currentTimeMillis() + "-" + fname);
-        String out = SystemUtils.executeInBash(null, "ffmpeg -loglevel error -threads 1 -y -i \"" + addr + "\" \"" + tempFile.getPath() + "\"");
+        String out = SystemUtils.executeSingleCommand(null, "ffmpeg -loglevel error -threads 1 -y -i \"" + addr + "\" \"" + tempFile.getPath() + "\"");
         if (out != null) {
             file.delete();
             tempFile.renameTo(file);
