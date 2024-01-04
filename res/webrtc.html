@@ -1,0 +1,327 @@
+<html>
+
+<head>
+    <title>Call</title>
+
+    <meta charset="utf-8">
+    <link rel="icon" type="image/png" href="favicon.svg"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- UIkit CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.6.18/dist/css/uikit.min.css"/>
+
+    <!-- UIkit JS -->
+    <script src="https://cdn.jsdelivr.net/npm/uikit@3.6.18/dist/js/uikit.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/uikit@3.6.18/dist/js/uikit-icons.min.js"></script>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body style="user-select: none;">
+<div class="HeaderHeight HeaderBackground" style="width: 100%; position: fixed;top: 0px;z-index: 1; background-color: #797979">
+    <div class="Centered" style="">
+        <div class="HeaderHeight uk-inline" style="text-align: center; float: right;">
+            <img id="CameraBut" src="camera.svg" style="width:20px; height: 20px; margin: 10px;" alt=""/>
+            <img id="MicrophoneBut" src="microphone.svg" style="width:20px; height: 20px; margin: 10px;" alt=""/>
+            <img id="SpeakerBut" src="speaker.svg" style="width:20px; height: 20px; margin: 10px; display: none;" alt=""/>
+            <img id="Share" src="monitor.svg" style="width:20px; height: 20px; margin: 10px; display: none;" alt=""/>
+            <img id="Chat" src="chat.svg" style="width:20px; height: 20px; margin: 10px; display: none;" alt=""/>
+            <img id="OptionBut" src="options-white.svg" style="width:20px; height: 20px; margin: 10px;" alt=""/>
+        </div>
+        <div class="HeaderHeight" style="float: left; color:white;">
+            <div id="PageTitle" class="HeaderTitle">WebRTC</div>
+        </div>
+        <div class="HeaderHeight" id="Return" style="text-align: center;flex: 0 0 50px;">
+            &nbsp
+        </div>
+    </div>
+</div>
+
+<div id="Videos" style="padding-top: 20px; text-align: center;" class="Centered">
+</div>
+<div id="FirstPage" style="padding-top: 10px; text-align: center;" class="Centered">
+    <div style="padding: 10px;"></div>
+    <div id="NameBut">
+        <span style="width: 25%; display: inline-block;" class="uk-text-muted">Your name</span>
+        <span id="NameText" style="width: 25%; display: inline-block;" class="uk-text-primary"></span>
+    </div>
+    <hr style="width: 50%; margin-left: 25%;"/>
+    <div id="RoomBut">
+        <span style="width: 25%; display: inline-block;" class="uk-text-muted">Room name</span>
+        <span id="RoomText" style="width: 25%; display: inline-block;" class="uk-text-primary">Public</span>
+    </div>
+    <div style="padding: 10px;"></div>
+    <button id="Start" class="uk-button" style="margin: 10px; width: 50%;" type="button">Start</button>
+</div>
+
+<div id="option-modal" class="uk-flex-top" uk-modal>
+    <div class="uk-modal-dialog uk-margin-auto-vertical Centered" style="padding: 0px;">
+        <ul class="uk-nav uk-dropdown-nav" style="text-align: center;">
+            <li><a id="RecordBut" class="ModalButtons" href="#"><img src="record.svg" style="display: inline-block; width: 15px; margin-right: 15px;"><span id="RecordButText">Record</span></a></li>
+            <li><a id="AboutBut" class="ModalButtons" href="#"><img src="info.svg" style="display: inline-block; width: 15px; margin-right: 15px;">About</a></li>
+        </ul>
+    </div>
+</div>
+
+<div id="select-modal" class="uk-flex-top" uk-modal>
+    <div class="uk-modal-dialog uk-margin-auto-vertical Centered" style="padding: 0px;">
+        <ul id="select-container" class="uk-nav uk-dropdown-nav" style="text-align: center;">
+        </ul>
+    </div>
+</div>
+
+<div id="InputModal" class="uk-flex-top" uk-modal>
+    <div class="uk-modal-dialog uk-margin-auto-vertical Centered" style="padding: 20px;">
+        <div id="edit-modal-text" style="font-size: 1rem; color: black; padding-bottom: 10px;"></div>
+        <input class="uk-input" autocomplete="off" style="margin-bottom: 10px; padding: 10px;" id="modalField" type="text" placeholder="">
+        <p class="uk-text-right" style="margin: 0;">
+            <button class="uk-button uk-button-default uk-modal-close" style="margin: 10px;" type="button">Close</button>
+            <button id="SubmitBut" class="uk-button uk-button-primary" style="margin: 10px;" type="button">Submit</button>
+        </p>
+    </div>
+</div>
+
+<div id="chat-modal" class="uk-flex-top" uk-modal>
+    <div class="uk-modal-dialog uk-margin-auto-vertical Centered" style="padding: 20px;">
+        <div style="font-size: 1rem; color: black; padding-bottom: 10px;">Chat</div>
+        <textarea class="uk-textarea" id="ChatArea" readonly spellcheck="false" name="ChatArea" style="height: 30%; min-width: 100%;" placeholder=""></textarea>
+        <p class="uk-text-right" style="margin: 0;">
+            <input id="ChatMessage" class="uk-input" autocomplete="off" style="margin-top: 15px; margin-bottom: 5px;" type="text" placeholder="Write a text">
+            <button class="uk-button uk-button-default uk-modal-close" style="margin: 10px;" type="button">Close</button>
+            <button id="SendBut" class="uk-button uk-button-primary" style="margin: 10px;" type="button">Send</button>
+        </p>
+    </div>
+</div>
+
+<script src="script.js"></script>
+<script src="webrtc.js"></script>
+
+<script>
+    $("#Start").click(function () {
+        if(!connected) {
+            return;
+        }
+        sendHi();
+        $("#FirstPage").hide();
+        $("#Chat").fadeIn(fadeDelay);
+    });
+
+    $("#Share").click(function () {
+        UIkit.modal($("#option-modal")).hide();
+        initiateDisplayMedia();
+    });
+    $("#Chat").click(function () {
+        UIkit.modal($("#chat-modal")).show();
+    });
+    $("#OptionBut").click(function () {
+        UIkit.modal($("#option-modal")).show();
+    });
+    $("#AboutBut").click(function () {
+        UIkit.modal($("#option-modal")).hide();
+        notify("primary", "Masoud Taghavian <br/> https://github.com/mtaghavian <br/> masoud.taghavian@gmail.com <br/> Enjoy :)", 5000);
+    });
+    $("#RecordBut").click(function () {
+        UIkit.modal($("#option-modal")).hide();
+        let startRecording = ($("#RecordButText").text() === "Record");
+        if(startRecording) {
+            if(sendingStream != null) {
+                recordStream(sendingStream);
+                $("#RecordButText").text("Stop recording");
+            }
+        } else {
+            stopRecording();
+            $("#RecordButText").text("Record");
+        }
+    });
+    function onSelect(event) {
+        UIkit.modal($("#select-modal")).hide();
+        let str = $(event.target).html();
+        if(str === "Disable camera") {
+            if(!myName.includes(camDisabledString)) {
+                changeMyName(myName + camDisabledString);
+            }
+            if(sendingStream != null) {
+                sendingStream.getVideoTracks().forEach(function (track) {
+                    if (track.readyState === 'live') {
+                        track.enabled = false;
+                    }
+                });
+            }
+        } else if(str === "Enable camera") {
+            changeMyName(myName.replaceAll(camDisabledString, ""));
+            if(sendingStream != null) {
+                sendingStream.getVideoTracks().forEach(function (track) {
+                    if (track.readyState === 'live') {
+                        track.enabled = true;
+                    }
+                });
+            }
+        } else if(str === "No camera") {
+            if(!myName.includes(camDisabledString)) {
+                changeMyName(myName + camDisabledString);
+            }
+            if(sendingStream != null) {
+                sendingStream.getVideoTracks().forEach(function (track) {
+                    if (track.readyState === 'live') {
+                        track.stop();
+                    }
+                });
+            }
+        } else if(str === "Change camera") {
+            $("#select-container").empty();
+            addSelectButton("Default camera");
+            addSelectButton("No camera");
+            for (let i = 0; i < cameraList.length; i++) {
+                addSelectButton("[C" + i + "] " + cameraList[i].label);
+            }
+            UIkit.modal($("#select-modal")).show();
+        } else if(str === "Default camera") {
+            changeMyName(myName.replaceAll(camDisabledString, ""));
+            cameraIndex = -1;
+            initiateUserMedia();
+        } else if(str === "Disable microphone") {
+            if(!myName.includes(micDisabledString)) {
+                changeMyName(myName + micDisabledString);
+            }
+            if(sendingStream != null) {
+                sendingStream.getAudioTracks().forEach(function (track) {
+                    if (track.readyState === 'live') {
+                        track.enabled = false;
+                    }
+                });
+            }
+        } else if(str === "Enable microphone") {
+            changeMyName(myName.replaceAll(micDisabledString, ""));
+            if(sendingStream != null) {
+                sendingStream.getAudioTracks().forEach(function (track) {
+                    if (track.readyState === 'live') {
+                        track.enabled = true;
+                    }
+                });
+            }
+        } else if(str === "No microphone") {
+            if(!myName.includes(micDisabledString)) {
+                changeMyName(myName + micDisabledString);
+            }
+            if(sendingStream != null) {
+                sendingStream.getAudioTracks().forEach(function (track) {
+                    if (track.readyState === 'live') {
+                        track.stop();
+                    }
+                });
+            }
+        } else if(str === "Change microphone") {
+            $("#select-container").empty();
+            addSelectButton("Default microphone");
+            addSelectButton("No microphone");
+            for (let i = 0; i < microphoneList.length; i++) {
+                addSelectButton("[M" + i + "] " + microphoneList[i].label);
+            }
+            UIkit.modal($("#select-modal")).show();
+        } else if(str === "Default microphone") {
+            changeMyName(myName.replaceAll(micDisabledString, ""));
+            microphoneIndex = -1;
+            initiateUserMedia();
+        } else {
+            str = str.substring(str.indexOf("[") + 1, str.indexOf("]"));
+            let index = parseInt(str.substring(1));
+            if (str.startsWith("C")) {
+                changeMyName(myName.replaceAll(camDisabledString, ""));
+                cameraIndex = index;
+                initiateUserMedia();
+            } else if (str.startsWith("M")) {
+                changeMyName(myName.replaceAll(micDisabledString, ""));
+                microphoneIndex = index;
+                initiateUserMedia();
+            } else {
+                navigator.mediaDevices.selectAudioOutput({deviceId: speakerList[index]});
+            }
+        }
+    }
+    function addSelectButton(label) {
+        var li = $('<li></li>');
+        var a = $('<a>' + label + '</a>');
+        $(a). prop("class", "ModalButtons");
+        $(li).append(a);
+        $(a).click(onSelect);
+        $("#select-container").append(li);
+    }
+    $("#CameraBut").click(function () {
+        $("#select-container").empty();
+        addSelectButton("Disable camera");
+        addSelectButton("Enable camera");
+        addSelectButton("Change camera");
+        UIkit.modal($("#select-modal")).show();
+    });
+    $("#MicrophoneBut").click(function () {
+        $("#select-container").empty();
+        addSelectButton("Disable microphone");
+        addSelectButton("Enable microphone");
+        addSelectButton("Change microphone");
+        UIkit.modal($("#select-modal")).show();
+    });
+    if (navigator.mediaDevices.selectAudioOutput) {
+        $("#SpeakerBut").fadeIn(fadeDelay);
+    }
+    $("#SpeakerBut").click(function () {
+        $("#select-container").empty();
+        for (let i = 0; i < speakerList.length; i++) {
+            addSelectButton("[S" + i + "] " + speakerList[i].label);
+        }
+        UIkit.modal($("#select-modal")).show();
+    });
+    $("#NameBut").click(function () {
+        $("#edit-modal-text").html("Your name:");
+        $("#modalField").val(myName);
+        UIkit.modal($("#InputModal")).show();
+        inputModalChoice = "name";
+    });
+    $("#RoomBut").click(function () {
+        $("#edit-modal-text").html("Room:");
+        $("#modalField").val(myRoom);
+        UIkit.modal($("#InputModal")).show();
+        inputModalChoice = "room";
+    });
+    var userAgent = navigator.userAgent;
+    if(!(userAgent.includes("Android") || userAgent.includes("iPhone"))) {
+        $("#Share").fadeIn(fadeDelay);
+    }
+    $("#SubmitBut").click(function () {
+        UIkit.modal($("#InputModal")).hide();
+        var y = "" + $("#modalField").val();
+        if(inputModalChoice === "name") {
+            myName = y;
+            window.localStorage.setItem("MyName", "" + myName);
+            $("#NameText").html(myName);
+        } else if(inputModalChoice === "room") {
+            myRoom = y;
+            $("#RoomText").html(myRoom);
+            window.history.replaceState(null, null, "?room=" + myRoom);
+        }
+    });
+    $("#modalField").keyup(function (e) {
+        if (e.keyCode == 13) {
+            $("#SubmitBut").trigger('click');
+        }
+    });
+    $("#SendBut").click(function () {
+        let msg = $("#ChatMessage").val();
+        $("#ChatMessage").val("");
+        let name = myName;
+        if(name.indexOf("&nbsp") >= 0) {
+            name = name.substring(0, name.indexOf("&nbsp"));
+        }
+        sendMessage(name + ": " + msg);
+    });
+    $("#ChatMessage").keyup(function (e) {
+        if (e.keyCode == 13) {
+            $("#SendBut").trigger('click');
+        }
+    });
+</script>
+
+</body>
+
+</html>
